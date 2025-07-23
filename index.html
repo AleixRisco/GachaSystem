@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Prototipo Gacha RPG v17</title>
+  <title>Prototipo Gacha RPG v18</title>
   <style>
     body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 20px; }
     .container { display: flex; gap: 40px; align-items: flex-start; }
@@ -20,15 +20,12 @@
     .rarity-legend { color: #ffcc00; font-weight: bold; }
     #gacha-section { display: flex; flex-direction: column; align-items: center; }
     #gacha-output { margin-bottom: 10px; display: grid; grid-template-columns: repeat(2, 120px); grid-template-rows: repeat(3, 160px); grid-gap: 20px; justify-content: center; min-height: 480px; }
-    .card { width: 120px; height: 160px; border: 2px solid #444; border-radius: 8px; background-color: #eee; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .card { width: 120px; height: 160px; position: relative; border: 2px solid #444; border-radius: 8px; background-color: #eee; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .card img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+    .badge { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); background-color: orange; color: white; font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
     #info-text { min-height: 1.2em; margin: 8px 0; visibility: hidden; font-size: 14px; }
     button { padding: 8px 16px; font-size: 16px; cursor: pointer; margin-top: 5px; }
-    /* Botones activos naranjas */
-    #gacha-btn:not(:disabled), #skip-btn:not(:disabled) {
-      background-color: orange;
-      color: white;
-    }
+    #gacha-btn:not(:disabled), #skip-btn:not(:disabled) { background-color: orange; color: white; }
     .controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     #lang-select { padding: 4px 8px; font-size: 16px; cursor: pointer; }
     table.legend { border-collapse: collapse; font-size: 16px; width: 200px; margin-top: 10px; }
@@ -84,13 +81,13 @@
       cards.forEach(c => {
         const tr = document.createElement('tr');
         tr.id = 'stat-' + c.id;
-        tr.innerHTML = \`
-          <td>\${c.id}</td>
-          <td><img src="\${c.image}" width="40" height="53" alt="Carta \${c.id}"></td>
-          <td class="rarity-\${c.rarity}">\${rarities[c.rarity].label.es}</td>
+        tr.innerHTML = `
+          <td>${c.id}</td>
+          <td><img src="${c.image}" width="40" height="53" alt="Carta ${c.id}"></td>
+          <td class="rarity-${c.rarity}">${rarities[c.rarity].label.es}</td>
           <td>0</td>
           <td class="percent">0%</td>
-        \`;
+        `;
         tbody.appendChild(tr);
       });
     }
@@ -99,9 +96,9 @@
       const tbody = document.querySelector('.legend tbody');
       tbody.innerHTML = '';
       Object.entries(rarities).forEach(([key, r]) => {
-        tbody.innerHTML += \`
-          <tr><td class="\${key}">\${r.label.es}</td><td>\${Math.round(r.probability*100)}%</td></tr>
-        \`;
+        tbody.innerHTML += `
+          <tr><td class="${key}">${r.label.es}</td><td>${Math.round(r.probability*100)}%</td></tr>
+        `;
       });
     }
 
@@ -126,16 +123,15 @@
       document.getElementById('info-text').textContent = t.info;
       document.querySelector('#cards-stats th:nth-child(5)').textContent = t.percent;
       document.getElementById('packs-count').textContent =
-        lang==='es' ? \`Sobres abiertos: \${totalPacks}\` : \`Packs opened: \${totalPacks}\`;
+        lang==='es' ? `Sobres abiertos: ${totalPacks}` : `Packs opened: ${totalPacks}`;
       document.querySelectorAll('#cards-stats tbody tr').forEach(tr => {
         const id = parseInt(tr.id.split('-')[1]);
         const key = cards.find(c => c.id===id).rarity;
         tr.children[2].textContent = rarities[key].label[lang];
       });
-      const legendTbody = document.querySelector('.legend tbody');
-      legendTbody.innerHTML = '';
+      const legendTbody = document.querySelector('.legend tbody'); legendTbody.innerHTML = '';
       Object.entries(rarities).forEach(([key, r]) => {
-        legendTbody.innerHTML += \`<tr><td class="\${key}">\${r.label[lang]}</td><td>\${Math.round(r.probability*100)}%</td></tr>\`;
+        legendTbody.innerHTML += `<tr><td class="${key}">${r.label[lang]}</td><td>${Math.round(r.probability*100)}%</td></tr>`;
       });
     }
 
@@ -180,12 +176,19 @@
     function revealCard(div) {
       if (div.classList.contains('revealed')) return;
       const id = parseInt(div.dataset.id), key = div.dataset.rarity;
-      div.innerHTML = \`<img src="\${cards.find(c => c.id===id).image}" style="border:4px solid \${rarities[key].color};">\`;
+      const row = document.getElementById('stat-' + id);
+      const previousCount = parseInt(row.children[3].textContent);
+      div.innerHTML = `<img src="${cards.find(c => c.id===id).image}" style="border:4px solid ${rarities[key].color};">`;
+      if (previousCount === 0) {
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = (document.getElementById('lang-select').value === 'es') ? 'Nuevo' : 'New';
+        div.appendChild(badge);
+      }
       div.classList.add('revealed');
       revealedCount++;
       totalCards++;
-      const row = document.getElementById('stat-' + id);
-      row.children[3].textContent = parseInt(row.children[3].textContent) + 1;
+      row.children[3].textContent = previousCount + 1;
       if (revealedCount === currentPack.length) {
         document.getElementById('skip-btn').disabled = true;
       }
