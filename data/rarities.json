@@ -1,0 +1,34 @@
+{
+  "common": {
+    "label": {
+      "es": "Común",
+      "en": "Common"
+    },
+    "probability": 0.5,
+    "color": "#cccccc"
+  },
+  "rare": {
+    "label": {
+      "es": "Rara",
+      "en": "Rare"
+    },
+    "probability": 0.3,
+    "color": "#4da6ff"
+  },
+  "epic": {
+    "label": {
+      "es": "Épica",
+      "en": "Epic"
+    },
+    "probability": 0.15,
+    "color": "#bf7fff"
+  },
+  "legend": {
+    "label": {
+      "es": "Legendaria",
+      "en": "Legendary"
+    },
+    "probability": 0.05,
+    "color": "#ffcc00"
+  }
+}
