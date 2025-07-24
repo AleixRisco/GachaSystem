@@ -43,9 +43,9 @@
     /* Colección */
     .collection-container { display: flex; gap: 20px; align-items: flex-start; }
     .collection-grid { display: grid; grid-template-columns: repeat(5, 120px); gap: 20px; max-height: 600px; overflow-y: auto; overflow-x: hidden; width: calc(5*120px + 4*20px + 10px); padding-right:10px; box-sizing: content-box;     padding-right: 10px;
-    padding-right: 10px;
+    padding-right: 20px;
 }
-    .collection-card { width: 120px; text-align: center; }
+    .collection-card { width: 120px; text-align: center; margin: 5px; }
     .collection-card .card-img { width: 120px; height: 160px; border: 2px solid #444; border-radius: 8px; overflow: hidden; }
     .collection-card .card-img img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
     .collection-card.uncollected .card-img img { filter: grayscale(100%); }
@@ -62,7 +62,7 @@
   </style>
 </head>
 <body>
-  <div class="version-label">v.38 | 24/07/2025 12:28:15</div>
+  <div class="version-label">v.39 | 24/07/2025 12:33:06</div>
   <div class="header">
     <div class="tabs">
       <button id="tab-btn-gacha" class="tab-btn active">Gacha</button>
@@ -185,16 +185,24 @@
 
     function bindEvents() {
       document.getElementById('gacha-btn').addEventListener('click', ()=> {
-        revealedCount=0;
-        const out = document.getElementById('gacha-output'); out.innerHTML='';
+        revealedCount = 0;
+        const out = document.getElementById('gacha-output'); out.innerHTML = '';
         const totalW = Object.values(selectedGacha.weights).reduce((a,b)=>a+b,0);
         currentPack = Array.from({length:5}, () => {
-          let r = Math.random()*totalW, acc=0;
-          for(const [k,p] of Object.entries(selectedGacha.weights)){
-            acc+=p; if(r<acc) return {id:getRandom(k),rarity:k};
-          }
-          return {id:getRandom('legend'),rarity:'legend'};
+            let r = Math.random()*totalW, acc = 0, key = 'legend';
+            for(const [k,p] of Object.entries(selectedGacha.weights)) { acc += p; if(r<acc){ key = k; break; } }
+            return {id:getRandom(key), rarity:key};
         });
+        currentPack.forEach((c,i)=>{
+            const d = document.createElement('div');
+            d.className = 'card'; d.dataset.id = c.id; d.dataset.rarity = c.rarity;
+            if(i === 2) { d.style.gridColumn = '1 / span 2'; d.style.justifySelf = 'center'; }
+            d.addEventListener('click', () => revealCard(d));
+            out.appendChild(d);
+        });
+        document.getElementById('gacha-btn').disabled = true;
+        document.getElementById('skip-btn').disabled = false;
+    });
         currentPack.forEach((c,i)=>{
           const d=document.createElement('div'); d.className='card'; d.dataset.id=c.id; d.dataset.rarity=c.rarity;
           if(i===2){d.style.gridColumn='1/span 2'; d.style.justifySelf='center';}
