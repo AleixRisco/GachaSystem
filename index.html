@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Prototipo Gacha RPG v.40</title>
+  <title>Prototipo Gacha RPG v.41</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .version-label { font-size: 14px; margin-bottom: 10px; color: #666; }
@@ -85,7 +85,7 @@
   </style>
 </head>
 <body>
-  <div class="version-label">v.40 | 24/07/2025 12:40:33</div>
+  <div class="version-label">v.41 | 24/07/2025 12:55:56</div>
   <div class="header">
     <div class="tabs">
       <button id="tab-btn-gacha" class="tab-btn active">Gacha</button>
@@ -274,7 +274,7 @@
       return pool[Math.floor(Math.random()*pool.length)];
     }
 
-    function show(tab) {
+    function showTab(tab) {
       document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.getElementById('tab-'+tab).classList.add('active');
