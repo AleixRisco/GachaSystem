@@ -1,28 +1,28 @@
 [
   {
-    "id": "default",
+    "id": "basico",
     "label": {
-      "es": "Normal",
-      "en": "Normal"
+      "es": "Básico",
+      "en": "Basic"
     },
-    "probabilities": {
-      "common": 0.5,
-      "rare": 0.3,
-      "epic": 0.15,
-      "legend": 0.05
+    "weights": {
+      "common": 10,
+      "rare": 6,
+      "epic": 3,
+      "legend": 1
     }
   },
   {
-    "id": "no-common",
+    "id": "elite",
     "label": {
-      "es": "Solo Rarezas",
-      "en": "Rare Only"
+      "es": "Elite",
+      "en": "Elite"
     },
-    "probabilities": {
-      "common": 0.0,
-      "rare": 0.6,
-      "epic": 0.3,
-      "legend": 0.1
+    "weights": {
+      "common": 0,
+      "rare": 6,
+      "epic": 3,
+      "legend": 1
     }
   }
 ]
