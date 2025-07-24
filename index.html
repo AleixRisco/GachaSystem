@@ -43,6 +43,7 @@
     /* Colección */
     .collection-container { display: flex; gap: 20px; align-items: flex-start; }
     .collection-grid { display: grid; grid-template-columns: repeat(5, 120px); gap: 20px; max-height: 600px; overflow-y: auto; overflow-x: hidden; width: calc(5*120px + 4*20px + 10px); padding-right:10px; box-sizing: content-box;     padding-right: 10px;
+    padding-right: 10px;
 }
     .collection-card { width: 120px; text-align: center; }
     .collection-card .card-img { width: 120px; height: 160px; border: 2px solid #444; border-radius: 8px; overflow: hidden; }
@@ -50,10 +51,18 @@
     .collection-card.uncollected .card-img img { filter: grayscale(100%); }
     .card-name { margin-top: 6px; font-weight: bold; }
     .card-count { margin-top: 4px; font-size: 14px; }
+  
+    /* Botones Gacha grandes con margen */
+    #gacha-btn, #skip-btn {
+      padding: 8px 16px;
+      font-size: 16px;
+      margin: 5px;
+    }
+
   </style>
 </head>
 <body>
-  <div class="version-label">v.37 | 24/07/2025 12:24:06</div>
+  <div class="version-label">v.38 | 24/07/2025 12:28:15</div>
   <div class="header">
     <div class="tabs">
       <button id="tab-btn-gacha" class="tab-btn active">Gacha</button>
