@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Prototipo Gacha RPG v27</title>
+  <title>Prototipo Gacha RPG v28</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -12,10 +12,11 @@
     #lang-select { padding: 4px 8px; font-size: 16px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    /* Gacha */
     .gacha-container { display: flex; gap: 20px; align-items: flex-start; }
-    #gacha-types-menu { display: flex; flex-direction: column; gap: 10px; }
-    .gacha-type-btn { padding: 6px 12px; border: 1px solid #444; background: #eee; cursor: pointer; border-radius: 4px; }
-    .gacha-type-btn.active { background: #add8e6; color: #000; }
+    #gacha-types-menu, #collection-filter-menu { display: flex; flex-direction: column; gap: 10px; }
+    .gacha-type-btn, .filter-btn { padding: 6px 12px; border: 1px solid #444; background: #eee; cursor: pointer; border-radius: 4px; }
+    .gacha-type-btn.active, .filter-btn.active { background: #add8e6; color: #000; }
     #gacha-section { display: flex; flex-direction: column; align-items: center; }
     #gacha-output { display: grid; grid-template-columns: repeat(2,120px); grid-template-rows: repeat(3,160px); gap:20px; min-height:480px; }
     .card { width:120px; height:160px; position:relative; border:2px solid #444; border-radius:8px; background:#eee; display:flex; align-items:center; justify-content:center; cursor:pointer; }
@@ -32,16 +33,15 @@
     .legend td.rare   { color:#4da6ff; font-weight:bold; }
     .legend td.epic   { color:#bf7fff; font-weight:bold; }
     .legend td.legend { color:#ffcc00; font-weight:bold; }
-    /* Tabla coleccion */
-    #cards-stats { border-collapse:collapse; width:100%; margin-top:20px; }
-    #cards-stats th, #cards-stats td { border:1px solid #444; padding:6px 10px; text-align:left; }
-    #cards-stats th { background:#555; color:#fff; }
-    #cards-stats tbody tr:nth-child(odd) { background:#fff; }
-    #cards-stats tbody tr:nth-child(even) { background:#f2f2f2; }
-    .rarity-common { color:#cccccc; font-weight:bold; }
-    .rarity-rare   { color:#4da6ff; font-weight:bold; }
-    .rarity-epic   { color:#bf7fff; font-weight:bold; }
-    .rarity-legend { color:#ffcc00; font-weight:bold; }
+    /* Colección */
+    .collection-container { display: flex; gap: 20px; align-items: flex-start; }
+    .collection-grid { display: grid; grid-template-columns: repeat(5, 120px); gap: 20px; }
+    .collection-card { width: 120px; text-align: center; }
+    .collection-card .card-img { width: 120px; height: 160px; border: 2px solid #444; border-radius: 8px; overflow: hidden; }
+    .collection-card .card-img img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+    .collection-card.uncollected .card-img img { filter: grayscale(100%); }
+    .card-name { margin-top: 6px; font-weight: bold; }
+    .card-count { margin-top: 4px; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -56,6 +56,7 @@
     </select>
   </div>
 
+  <!-- Pestaña Gacha -->
   <div id="tab-gacha" class="tab-content active">
     <div class="gacha-container">
       <div id="gacha-types-menu"></div>
@@ -74,16 +75,17 @@
     </div>
   </div>
 
+  <!-- Pestaña Colección -->
   <div id="tab-collection" class="tab-content">
-    <table id="cards-stats">
-      <thead><tr><th>Carta</th><th>Imagen</th><th>Rareza</th><th>Cantidad</th><th>%</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="collection-container">
+      <div id="collection-filter-menu"></div>
+      <div id="collection-grid" class="collection-grid"></div>
+    </div>
   </div>
 
 <script>
 let cards=[], rarities={}, gachas=[], selectedGacha;
-let totalPacks=0, totalCards=0, currentPack=[], revealedCount=0;
+let counts={}, totalPacks=0, totalCards=0, currentPack=[], revealedCount=0;
 
 async function loadData(){
   const bust=Date.now();
@@ -92,19 +94,15 @@ async function loadData(){
     fetch(`data/rarities.json?v=${bust}`,{cache:'no-cache'}).then(r=>r.json()),
     fetch(`data/gachas.json?v=${bust}`,{cache:'no-cache'}).then(r=>r.json())
   ]);
-  initStats(); initGachaMenu(); bindEvents();
+  // Inicializar contadores
+  cards.forEach(c => counts[c.id] = 0);
+  initStats(); initGachaMenu(); initCollection(); bindEvents();
   document.getElementById('gacha-btn').disabled=false;
   updateLanguage('es');
 }
 
 function initStats(){
-  const tbody=document.querySelector('#cards-stats tbody'); tbody.innerHTML='';
-  cards.forEach(c=>{
-    tbody.innerHTML+=`<tr id="stat-${c.id}">
-      <td>${c.id}</td><td><img src="${c.image}" width="40" height="53"></td>
-      <td class="rarity-${c.rarity}">${rarities[c.rarity].label.es}</td><td>0</td><td class="percent">0%</td>
-    </tr>`;
-  });
+  // No usado en grid
 }
 
 function initGachaMenu(){
@@ -127,14 +125,60 @@ function selectGacha(id){
 
 function updateLegend(){
   const tbody=document.querySelector('#legend-section .legend tbody'); tbody.innerHTML='';
-  const weights=selectedGacha.weights;
-  const total=Object.values(weights).reduce((a,b)=>a+b,0);
+  const weights=selectedGacha.weights, total=Object.values(weights).reduce((a,b)=>a+b,0);
   Object.entries(weights).forEach(([key,pts])=>{
-    const prob = total?((pts/total)*100).toFixed(1)+'%':'0%';
+    const prob= total?((pts/total)*100).toFixed(1)+'%':'0%';
     tbody.innerHTML+=`<tr><td class="${key}">${rarities[key].label.es}</td><td>${prob}</td></tr>`;
   });
 }
 
+function initCollection(){
+  const menu=document.getElementById('collection-filter-menu'); menu.innerHTML='';
+  // Filtro "Todas"
+  const allBtn=document.createElement('button');
+  allBtn.className='filter-btn active'; allBtn.textContent='Todas';
+  allBtn.onclick=()=>filterCollection('all');
+  menu.appendChild(allBtn);
+  Object.keys(rarities).forEach(r=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn'; btn.textContent=rarities[r].label.es;
+    btn.onclick=()=>filterCollection(r);
+    menu.appendChild(btn);
+  });
+  renderCollection();
+}
+
+function renderCollection(){
+  const grid=document.getElementById('collection-grid'); grid.innerHTML='';
+  cards.forEach(c=>{
+    const div=document.createElement('div'); div.className='collection-card';
+    div.dataset.rarity=c.rarity;
+    // Card image
+    const imgDiv=document.createElement('div'); imgDiv.className='card-img';
+    const img=document.createElement('img'); img.src=c.image; img.alt='Carta '+c.id;
+    imgDiv.appendChild(img); div.appendChild(imgDiv);
+    // Name
+    const nameDiv=document.createElement('div'); nameDiv.className='card-name';
+    nameDiv.textContent='Carta '+c.id; div.appendChild(nameDiv);
+    // Count
+    const countDiv=document.createElement('div'); countDiv.className='card-count';
+    countDiv.textContent=counts[c.id]>0?counts[c.id]:'No encontrada';
+    if(counts[c.id]===0) div.classList.add('uncollected');
+    div.appendChild(countDiv);
+    grid.appendChild(div);
+  });
+}
+
+function filterCollection(rarity){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(rarity==='all') document.querySelector('.filter-btn').classList.add('active');
+  else document.querySelector(`#collection-filter-menu .filter-btn:nth-child(${Object.keys(rarities).indexOf(rarity)+2})`).classList.add('active');
+  document.querySelectorAll('.collection-card').forEach(card=>{
+    card.style.display = (rarity==='all' || card.dataset.rarity===rarity)?'block':'none';
+  });
+}
+
+// Eventos
 function bindEvents(){
   document.getElementById('gacha-btn').addEventListener('click',generatePack);
   document.getElementById('skip-btn').addEventListener('click',()=>document.querySelectorAll('.card:not(.revealed)').forEach(d=>revealCard(d)));
@@ -148,7 +192,7 @@ function generatePack(){
   const totalW=Object.values(selectedGacha.weights).reduce((a,b)=>a+b,0);
   const out=document.getElementById('gacha-output'); out.innerHTML='';
   currentPack=Array.from({length:5},()=>{
-    let r=Math.random()*totalW, acc=0;
+    let r=Math.random()*totalW,acc=0;
     for(const [key,pts] of Object.entries(selectedGacha.weights)){
       acc+=pts; if(r<acc) return {id:getRandomCardByRarity(key),rarity:key};
     }
@@ -165,13 +209,29 @@ function generatePack(){
 function revealCard(div){
   if(div.classList.contains('revealed')) return;
   const id=+div.dataset.id, key=div.dataset.rarity;
-  const row=document.getElementById('stat-'+id), prev=+row.children[3].textContent;
-  div.innerHTML=`<img src="${cards.find(c=>c.id===id).image}" style="border:4px solid ${rarities[key].color};">`;
-  if(prev===0){const b=document.createElement('div');b.className='badge';b.textContent=document.getElementById('lang-select').value==='es'?'Nuevo':'New';div.appendChild(b);}
+  div.innerHTML=`<img src="${cards.find(c=>c.id===id).image}" style="width:100%;height:100%;border:4px solid ${rarities[key].color};border-radius:6px;">`;
+  const prev=counts[id];
+  if(prev===0){
+    const b=document.createElement('div'); b.className='badge';
+    b.textContent=document.getElementById('lang-select').value==='es'?'Nuevo':'New'; div.appendChild(b);
+  }
   div.classList.add('revealed'); revealedCount++; totalCards++;
-  row.children[3].textContent=prev+1;
-  if(revealedCount===currentPack.length){document.getElementById('skip-btn').disabled=true;document.getElementById('gacha-btn').disabled=false;}
-  document.querySelectorAll('#cards-stats tbody tr').forEach(tr=>{const cnt=+tr.children[3].textContent;tr.children[4].textContent=(cnt/totalCards*100).toFixed(1)+'%';});
+  counts[id]++; updateCollectionCard(id);
+  if(revealedCount===currentPack.length){
+    document.getElementById('skip-btn').disabled=true;
+    document.getElementById('gacha-btn').disabled=false;
+  }
+}
+
+function updateCollectionCard(id){
+  const cardsEls = document.querySelectorAll('.collection-card');
+  cardsEls.forEach(card=>{
+    if(card.querySelector('.card-name').textContent.endsWith(id)){
+      const countDiv=card.querySelector('.card-count');
+      countDiv.textContent=counts[id];
+      if(counts[id]>0) card.classList.remove('uncollected');
+    }
+  });
 }
 
 function showTab(tab){
@@ -186,7 +246,12 @@ function updateLanguage(lang){
   document.getElementById('info-text').textContent=t.info;
   document.getElementById('gacha-btn').textContent=t.btnOpen;
   document.getElementById('skip-btn').textContent=t.skip;
+  // actualizar labels
   document.querySelectorAll('.gacha-type-btn').forEach((b,i)=>b.textContent=gachas[i].label[lang]);
+  document.querySelectorAll('.filter-btn').forEach((b,i)=>{
+    if(i===0) b.textContent= lang==='es'?'Todas':'All';
+    else b.textContent=rarities[Object.keys(rarities)[i-1]].label[lang];
+  });
 }
 
 function getRandomCardByRarity(key){
