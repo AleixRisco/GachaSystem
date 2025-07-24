@@ -1,0 +1,28 @@
+[
+  {
+    "id": "default",
+    "label": {
+      "es": "Normal",
+      "en": "Normal"
+    },
+    "probabilities": {
+      "common": 0.5,
+      "rare": 0.3,
+      "epic": 0.15,
+      "legend": 0.05
+    }
+  },
+  {
+    "id": "no-common",
+    "label": {
+      "es": "Solo Rarezas",
+      "en": "Rare Only"
+    },
+    "probabilities": {
+      "common": 0.0,
+      "rare": 0.6,
+      "epic": 0.3,
+      "legend": 0.1
+    }
+  }
+]

@@ -1,34 +1,30 @@
 {
   "common": {
-    "color": "#cccccc",
     "label": {
-      "en": "Common",
-      "es": "Común"
+      "es": "Común",
+      "en": "Common"
     },
-    "probability": 0.55
-  },
-  "epic": {
-    "color": "#bf7fff",
-    "label": {
-      "en": "Epic",
-      "es": "Épica"
-    },
-    "probability": 0.15
-  },
-  "legend": {
-    "color": "#ffcc00",
-    "label": {
-      "en": "Legendary",
-      "es": "Legendaria"
-    },
-    "probability": 0.05
+    "color": "#cccccc"
   },
   "rare": {
-    "color": "#4da6ff",
     "label": {
-      "en": "Rare",
-      "es": "Rara"
+      "es": "Rara",
+      "en": "Rare"
     },
-    "probability": 0.25
+    "color": "#4da6ff"
+  },
+  "epic": {
+    "label": {
+      "es": "Épica",
+      "en": "Epic"
+    },
+    "color": "#bf7fff"
+  },
+  "legend": {
+    "label": {
+      "es": "Legendaria",
+      "en": "Legendary"
+    },
+    "color": "#ffcc00"
   }
 }
